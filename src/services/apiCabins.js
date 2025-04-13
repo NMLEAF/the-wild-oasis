@@ -11,13 +11,65 @@ export async function getCabins() {
   return data;
 }
 
-export async function deleteCabin(id) {
-  const { data, error } = await supabase.from("cabins").delete().eq("id", id);
+export async function createCabin(newCabin) {
+  const imageName = `${Math.random()}-${newCabin.image.name}`.replaceAll(
+    "/",
+    ""
+  );
+  const imagePath = `${
+    import.meta.env.VITE_SUPABASE_URL
+  }/storage/v1/object/public/cabin-images/${imageName}`;
+
+  // 1. Create cabin
+  const { data, error } = await supabase
+    .from("cabins")
+    .insert([{ ...newCabin, image: imagePath }])
+    .select();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Cabin could not be created");
+  }
+
+  // 2. Upload image
+  const { error: storageError } = await supabase.storage
+    .from("cabin-images")
+    .upload(imageName, newCabin.image);
+
+  // 3. Delete the cabin if there is an error uploading the image
+  if (storageError) {
+    await supabase.from("cabins").delete().eq("id", data.id);
+    console.error(storageError);
+    throw new Error(
+      "Cabin image could not be uploaded and the cabin is not created"
+    );
+  }
+
+  return data;
+}
+
+export async function deleteCabin({ image, cabinId }) {
+  const imageName = image.split("/").at(-1);
+
+  // 1. Delete the cabin image in the storage
+  const { error: storageError } = await supabase.storage
+    .from("cabin-images")
+    .remove([imageName]);
+
+  if (storageError) {
+    console.log(storageError);
+    throw new Error("Cabin image could not be deleted.");
+  }
+
+  const { data, error } = await supabase
+    .from("cabins")
+    .delete()
+    .eq("id", cabinId);
 
   if (error) {
     console.error(error);
     throw new Error("Cabin could not be deleted");
   }
 
-  return data;
+  return;
 }
