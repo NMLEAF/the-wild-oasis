@@ -31,7 +31,7 @@ function CreateCabinForm() {
   });
 
   const onSubmit = (data) => {
-    // console.log(data);
+    console.log(data);
 
     const result = mutate({ ...data, image: data.image[0] });
 
