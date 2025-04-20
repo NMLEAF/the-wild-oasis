@@ -34,8 +34,6 @@ function CreateCabinForm() {
     console.log(data);
 
     const result = mutate({ ...data, image: data.image[0] });
-
-    // console.log(data);
   };
 
   const onError = (data) => {
@@ -49,7 +47,7 @@ function CreateCabinForm() {
           type="text"
           id="name"
           disabled={isCreating}
-          {...register("name", { required: "This field is required" })}
+          {...register("name", { required: "Name field is required" })}
         />
       </FormRow>
 
